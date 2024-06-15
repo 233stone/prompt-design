@@ -1,0 +1,14 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+
+# 忽略 IntelliJ IDEA 项目配置目录
+.idea/
+
+# 忽略 Visual Studio Code 工作区配置文件
+.vscode/
