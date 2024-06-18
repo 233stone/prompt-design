@@ -247,7 +247,7 @@ Please translate the summary you generated above into English and provide the tr
 <context>
     我现在需要写一篇毕业论文，论文的题目是**基于SpringBoot的图书管理系统的设计与实现**。我希望使用的技术栈包括[[[Vue+ElementUI(前端)，SpringBoot+SpringMVC+MyBatis(后端)，MySql数据库技术]]]。
     论文包含9个章节，使用chapters标签分隔。
-    <chaptesr>
+    <chaptesrs>
         1.摘要
         2.绪论
         3.系统分析
@@ -300,3 +300,60 @@ Please translate the summary you generated above into English and provide the tr
 [生成的研究内容，在`绪论.md`中也有](https://chatgpt.com/share/de2af01c-c3ab-4569-a3ca-2e06a189c0b7)
 
 有时候生成的不一定符合要求，可以让它多生成几次结合的来。
+
+
+
+
+
+# 需求分析
+
+[4.1 功能需求-在`需求分析.md`中也有](https://chatgpt.com/share/85734f76-4f7f-43ac-a8d3-cb38cccd42fc)
+
+[4.2 可行性分析-在`需求分析.md`中也有](https://chatgpt.com/share/7d10ad24-b83d-4329-beb3-fdf8328d618c)
+
+[4.3 非功能性需求-在`需求分析.md`中也有](https://chatgpt.com/share/17be0738-82b1-4d1d-bbc7-d2adaefb0ed5)
+
+使用几乎一样的prompt，只要求改<object>标签和<steps>标签中##分隔的内容就行。
+
+```XML
+<system>
+    你需要扮演一位熟悉软件工程和SpringBoot框架开发的大学教授，你需要详细指导我完成我的毕业论文，提供具体的建议和指导。
+</system>
+<context>
+    我现在需要写一篇毕业论文，论文的题目是**基于SpringBoot的图书管理系统的设计与实现**。我希望使用的技术栈包括[[[Vue+ElementUI(前端)，SpringBoot+SpringMVC+MyBatis(后端)，MySql数据库技术]]]。
+    论文包含9个章节，使用chapters标签分隔。
+    <chaptesrs>
+        1.摘要
+        2.绪论
+        3.系统分析
+        4.需求分析
+        5.系统实现
+        6.系统测试
+        7.总结与展望
+        8.参考文献
+        9.致谢
+	</chapters>
+    图书管理系统共包含6个功能，使用features标签分隔。
+    <features>
+        1.用户登录注册：可以通过邮箱注册账号，并在数据库中创建新用户记录，使用账号密码登录。
+        2.图书信息管理（增删改查）：管理员对图书的管理，包括数量，图书信息（书名、作者...）等。
+        3.借阅管理：用户借阅图书，系统会并更新库存数量；用户归还图书后，系统恢复库存数量。
+        4.权限管理：普通用户和管理员具有不同的权限，普通用户只能借书还书，管理员可以管理图书。
+        5.用户管理：：管理员可以查看所有注册用户信息和状态；用户可以修改密码查看借书数量等。
+        6.日志管理：系统自动记录用户和管理员的操作日志，包括登录、注销、添加、删除、修改图书信息、借阅操作等；管理员可以查看日志。
+    </features>
+</context>
+<object>
+    接下来你需要响应给我论文中##需求分析-功能需求##部分的内容，保证生成内容的原创性和学术性，语气参考tone标签，步骤参考steps标签，让我们一步一步思考。
+</object>
+<steps>
+    1.理解并思考我提供的背景信息，查阅相关资料。
+    2.结合我的论文题目和实现撰写##需求分析-功能需求##初稿。
+    3.审查你初稿是否有事实性错误、抄袭等部分。
+    4.根据步骤3的审查修改初稿中的错误。
+</steps>
+<tone>
+    正式、暴躁老哥
+</tone>
+```
+
