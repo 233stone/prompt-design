@@ -205,6 +205,8 @@
 
 现在我们有了中文摘要，还需要英文摘要，直接让ChatGPT帮我们翻译就行，我自己测试发现使用翻译的目标语言和它对话它翻译出来的回更自然一些（测试量很少，比较主观）。然后给他提供的背景信息越多，它翻译出来的也就越自然，我们可以直接在刚才的对话基础上让它翻译，因为它还记得之前提供的有关我们写论文的信息。
 
+在这里需要说明的一点是大语言模型是没有记忆的，虽然我们可以和ChatGPT聊天，看起来它记得我们之前的对话，但事实是我们每次给它发消息都需要将之前的对话也传递给它，或者是将之前对话的总结传递给它（这些事情openai帮我们做了）。
+
 如果是单独的让翻译一段文字，就需要提供更多的背景信息才能更准确。下面prompt中的‘信达雅’这些东西其实可有可无，如果需要节省token可以删掉。
 
 ```XML
@@ -415,6 +417,274 @@ Please translate the summary you generated above into English and provide the tr
 
 ## 数据库设计
 
+数据库部分我们需要让它帮忙画出E-R图和数据库表，这里我们如果没有设计好数据库表，可以告诉他我们的需求，然后让它帮我们生成对应的SQL。将之前的prompt修改一下就行，我这里做的比较简单，
+
+```XML
+<system>
+    你需要扮演一位熟悉软件工程和SpringBoot框架开发的资深软件工程师，你需要详细指导我完成我的**基于SpringBoot的图书管理系统**项目，有关这个项目的具体信息由context标签分隔。
+</system>
+<context>
+    我现在需要实现**基于SpringBoot的图书管理系统**。我希望使用的技术栈包括[[[Vue+ElementUI(前端)，SpringBoot+SpringMVC+MyBatis(后端)，MySql数据库技术]]]。
+    图书管理系统共包含6个功能，使用features标签分隔。
+    <features>
+        1.用户登录注册：可以通过邮箱注册账号，并在数据库中创建新用户记录，使用账号密码登录。
+        2.图书信息管理（增删改查）：管理员对图书的管理，包括数量，图书信息（书名、作者...）等。
+        3.借阅管理：用户借阅图书，系统会并更新库存数量；用户归还图书后，系统恢复库存数量。
+        4.权限管理：普通用户和管理员具有不同的权限，普通用户只能借书还书，管理员可以管理图书。
+        5.用户管理：：管理员可以查看所有注册用户信息和状态；用户可以修改密码查看借书数量等。
+        6.日志管理：系统自动记录用户和管理员的操作日志，包括登录、注销、添加、删除、修改图书信息、借阅操作等；管理员可以查看日志。
+    </features>
+	图书管理系统的数据库共有3张表，使用tables标签分隔。
+    <tables>
+        1.user表：用户信息
+        2.book表：图书信息
+        3.log表：日志信息
+    </tables> 
+</context>
+<object>
+    接下来你需要响应给我生成##user表##的SQL语句和对user表的解释 ，用户表需要包含主键id、用户名、密码、salt、邮箱、状态、创建时间等内容，让我们一步一步思考。
+</object>
+```
+
+[生成内容-在`数据库设计.md`中也有](https://chatgpt.com/share/9bb96616-8d17-4d6a-97fb-51930e859c8f)
+
+生成的内容不太满意，它只生成了我们列举出来的属性，像存放书籍的信息等等都没有。可以想让他帮我们想出来都有哪些表，这些表都有哪些属性，最后再来生成SQL语句，新的prompt如下。
+
+```XML
+<system>
+    你需要扮演一位熟悉软件工程和SpringBoot框架开发的资深软件工程师，你需要详细指导我完成我的**基于SpringBoot的图书管理系统**项目，有关这个项目的具体信息由context标签分隔。
+</system>
+<context>
+    我现在需要实现**基于SpringBoot的图书管理系统**。我希望使用的技术栈包括[[[Vue+ElementUI(前端)，SpringBoot+SpringMVC+MyBatis(后端)，MySql数据库技术]]]。
+    图书管理系统共包含6个功能，使用features标签分隔。
+    <features>
+        1.用户登录注册：可以通过邮箱注册账号，并在数据库中创建新用户记录，使用账号密码登录。
+        2.图书信息管理（增删改查）：管理员对图书的管理，包括数量，图书信息（书名、作者...）等。
+        3.借阅管理：用户借阅图书，系统会并更新库存数量；用户归还图书后，系统恢复库存数量。
+        4.权限管理：普通用户和管理员具有不同的权限，普通用户只能借书还书，管理员可以管理图书。
+        5.用户管理：：管理员可以查看所有注册用户信息和状态；用户可以修改密码查看借书数量等。
+        6.日志管理：系统自动记录用户和管理员的操作日志，包括登录、注销、添加、删除、修改图书信息、借阅操作等；管理员可以查看日志。
+    </features>
+</context>
+<object>
+    接下来你需要帮我分析这个项目的数据库该如何设计，都有哪些表，为什么？并解释这些表的作用，让我们一步一步思考。
+</object>
+```
+
+[生成内容-在`数据库设计.md中也有`](https://chatgpt.com/share/6c077b4d-f897-4967-b783-16dfbfe30c21)
+
+现在我们根据它生成的表结构和信息再来让它写SQL语句。
+
+```XML
+<system>
+    你需要扮演一位熟悉软件工程和SpringBoot框架开发的资深软件工程师，你需要详细指导我完成我的**基于SpringBoot的图书管理系统**项目，有关这个项目的具体信息由context标签分隔。
+</system>
+
+<context>
+    我现在需要实现**基于SpringBoot的图书管理系统**。我希望使用的技术栈包括[[[Vue+ElementUI(前端)，SpringBoot+SpringMVC+MyBatis(后端)，MySql数据库技术]]]。
+    图书管理系统共包含6个功能，使用features标签分隔。
+    <features>
+        1.用户登录注册：可以通过邮箱注册账号，并在数据库中创建新用户记录，使用账号密码登录。
+        2.图书信息管理（增删改查）：管理员对图书的管理，包括数量，图书信息（书名、作者...）等。
+        3.借阅管理：用户借阅图书，系统会并更新库存数量；用户归还图书后，系统恢复库存数量。
+        4.权限管理：普通用户和管理员具有不同的权限，普通用户只能借书还书，管理员可以管理图书。
+        5.用户管理：：管理员可以查看所有注册用户信息和状态；用户可以修改密码查看借书数量等。
+        6.日志管理：系统自动记录用户和管理员的操作日志，包括登录、注销、添加、删除、修改图书信息、借阅操作等；管理员可以查看日志。
+    </features>
+		图书管理系统的数据库共有6张表，使用tables标签分隔，这些表中不存在外键。
+    <tables>
+        1.用户表 (User)
+        字段：
+        id (主键): 用户ID
+        email: 用户邮箱
+        password: 用户密码
+        name: 用户名
+        role: 用户角色（非外键）
+        created_at: 创建时间
+        updated_at: 更新时间
+            ---
+        2.图书表 (Book)
+        字段：
+        id (主键): 图书ID
+        title: 书名
+        author: 作者
+        publisher: 出版社
+        isbn: 国际标准书号
+        quantity: 图书库存数量
+        created_at: 创建时间
+        updated_at: 更新时间
+            ---
+        3.借阅记录表 (BorrowRecord)
+        字段：
+        id (主键): 借阅记录ID
+        user_id: 用户ID（非外键，通过应用层管理数据完整性）
+        book_id: 图书ID（非外键，通过应用层管理数据完整性）
+        borrow_date: 借阅日期
+        return_date: 归还日期
+        status: 借阅状态（借阅中/已归还）
+            ---
+
+        4.日志表 (Log)
+        字段：
+        id (主键): 日志ID
+        user_id: 用户ID（非外键，通过应用层管理数据完整性）
+        operation: 操作类型（如：登录、注销、添加图书、删除图书、借阅、归还等）
+        description: 操作描述
+        timestamp: 操作时间
+            ---
+        5.权限表 (Role)
+        字段：
+        id (主键): 权限ID
+        role_name: 角色名称（普通用户/管理员）
+        description: 角色描述
+            ---
+        6.用户角色关系表 (UserRole)
+        字段：
+        user_id: 用户ID（非外键，通过应用层管理数据完整性）
+        role_id: 角色ID（非外键，通过应用层管理数据完整性）
+    </tables>
+</context>
+<object>
+    阅读理解我提供的背景信息，一步一步思考后接下来你需要响应给我生成这6张表的SQL语句。
+</object>
+```
+
+[生成内容-在`数据库设计.md中也有`](https://chatgpt.com/share/db22a8f8-ece5-4885-ad74-0f65e12e31f4)
+
+现在我们已经有了数据库的结构和对应的SQL语句（有些错误，需要自己修改）。
+
+我们在论文中可能需要数据库对应的表格，我们自己画表格比较繁琐，也可以让ChatGPT帮我们生成。
+
+直接让它生成表格自己描述比较麻烦，需要告诉它表头等各种信息，最好的做法是直接给他一个示例表格，让它模仿示例生成。
+
+有很多时候生成的内容不太符合要求，就能提供给它少量例子，让它模仿例子来学习，这个就是LLM的小样本学习。
+
+给他示例可以直接给它图片，也能给它markdown格式的表格，我自己测试来看提供markdown形式的的表格效果更好，而且给它发图片是有限制次数的。这里我们找了一张图片，为了提高效果，将它转化成markdown表格。这里有人就要问了，这和我们自己画表格不是一样吗，还是很麻烦。
+
+其实我们将这个图片转化成表格也不需要我们亲自动手，也能让ChatGPT帮我们完成，这里就能看出ChatGPT的强大了，下面我们来试一下将图片转成表格。
+
+<img src="imgs/example-数据库表.png" alt="image-20240626155645825" style="zoom:50%;" />
+
+```XML
+将我提供给你图片中的表格转化成markdown形式的表格，保证原始信息的正确。
+```
+
+生成的内容：
+
+> Sure, here is the table from the image converted into Markdown format:
+>
+> | 字段         | 数据类型 | 备注                          |
+> | ------------ | -------- | ----------------------------- |
+> | Id           | int      | 图书 id                       |
+> | name         | varchar  | 图书名称                      |
+> | author       | varchar  | 作者                          |
+> | publish      | varchar  | 出版社                        |
+> | ISBN         | varchar  | ISBN                          |
+> | Introduction | varchar  | 图书简介                      |
+> | Language     | varchar  | 撰写语言                      |
+> | Price        | double   | 价格                          |
+> | Publish-date | date     | 出版时间                      |
+> | type         | int      | 图书类型                      |
+> | status       | int      | 实时状态 (0 未借出, 1 已借出) |
+>
+> This table retains all the original information from the provided image.
+
+现在我们有了示例表格，有了SQL语句，就能让它来生成表格了。
+
+```XML
+<system>
+    你需要扮演一位熟悉软件工程和SpringBoot框架开发的大学教授，你需要详细指导我完成我的毕业论文，提供具体的建议和指导。
+</system>
+<context>
+    我现在需要写一篇毕业论文，论文的题目是**基于SpringBoot的图书管理系统的设计与实现**。我希望使用的技术栈包括[[[Vue+ElementUI(前端)，SpringBoot+SpringMVC+MyBatis(后端)，MySql数据库技术]]]。
+    论文包含9个章节，使用chapters标签分隔。
+    <chaptesrs>
+        1.摘要
+        2.绪论
+        3.系统分析
+        4.需求分析
+        5.系统实现
+        6.系统测试
+        7.总结与展望
+        8.参考文献
+        9.致谢
+	</chapters>
+    图书管理系统共包含6个功能，使用features标签分隔。
+    <features>
+        1.用户登录注册：可以通过邮箱注册账号，并在数据库中创建新用户记录，使用账号密码登录。
+        2.图书信息管理（增删改查）：管理员对图书的管理，包括数量，图书信息（书名、作者...）等。
+        3.借阅管理：用户借阅图书，系统会并更新库存数量；用户归还图书后，系统恢复库存数量。
+        4.权限管理：普通用户和管理员具有不同的权限，普通用户只能借书还书，管理员可以管理图书。
+        5.用户管理：：管理员可以查看所有注册用户信息和状态；用户可以修改密码查看借书数量等。
+        6.日志管理：系统自动记录用户和管理员的操作日志，包括登录、注销、添加、删除、修改图书信息、借阅操作等；管理员可以查看日志。
+    </features>
+</context>
+<object>
+    结合我提供给你的sql语句和table标签中的内容，模仿example标签中的例子，生成给我##数据库设计-用户表##部分的内容，让我们一步一步来思考。
+</object>
+<sql>
+   CREATE TABLE User (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+); 
+</sql>
+<table>
+    1.用户表 (User)
+    字段：
+    id (主键): 用户ID
+    email: 用户邮箱
+    password: 用户密码
+    name: 用户名
+    role: 用户角色（非外键）
+    created_at: 创建时间
+    updated_at: 更新时间  
+</table>
+<example>
+    主要包括书籍书名、书籍地址等信息，书籍编号
+是系统生成的，具有唯一性；可通过书籍编号进行书
+籍查询。书籍信息表内容如表1所示。（主要是对这张表的解释）
+
+| 字段         | 数据类型 | 备注                          |
+| ------------ | -------- | ----------------------------- |
+| Id           | int      | 图书 id                       |
+| name         | varchar  | 图书名称                      |
+| author       | varchar  | 作者                          |
+| publish      | varchar  | 出版社                        |
+| ISBN         | varchar  | ISBN                          |
+| Introduction | varchar  | 图书简介                      |
+| Language     | varchar  | 撰写语言                      |
+| Price        | double   | 价格                          |
+| Publish-date | date     | 出版时间                      |
+| type         | int      | 图书类型                      |
+| status       | int      | 实时状态 (0 未借出, 1 已借出) |
+
+</example>
+```
+
+
+
+这个是生成的表格，[完成的生成内容-在`数据库设计.md`中也有](https://chatgpt.com/share/1e33dbe5-d375-4f07-bc6a-d805b154fb90)
+
+| 字段       | 数据类型     | 备注                                       |
+| ---------- | ------------ | ------------------------------------------ |
+| id         | int          | 用户ID，主键，自动递增                     |
+| email      | varchar(255) | 用户邮箱，必须唯一                         |
+| password   | varchar(255) | 用户密码，存储经过加密后的密码             |
+| name       | varchar(255) | 用户名                                     |
+| role       | varchar(50)  | 用户角色，可以是普通用户或管理员           |
+| created_at | timestamp    | 创建时间，默认值为当前时间                 |
+| updated_at | timestamp    | 更新时间，每次记录更新时自动设置为当前时间 |
+
+
+
+生成其它的表也是类似的prompt，只要改一下对应的sql、table、object标签中对应内容就行。
+
 
 
 ## 详细设计
+
